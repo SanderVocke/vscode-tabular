@@ -115,6 +115,38 @@ function renderWithPadding(lines, padding) {
 
 {
   const lines = [
+    'name,role,team',
+    'Alice,Engineer,Platform',
+    'Bob,Designer,Product',
+  ];
+
+  const aligned = applyAlignmentToLines(lines, ',');
+  assert.deepEqual(applyAlignmentToLines(aligned, ','), aligned, 'comma alignment should be idempotent');
+  assert.deepEqual(computePadding(aligned, ','), [], 'existing trailing spaces before commas should satisfy padding');
+  assert.deepEqual(computePostDelimiterSpacing(aligned, ','), [], 'existing leading spaces after commas should satisfy padding');
+}
+
+{
+  const alreadySpaced = [
+    'name  , role     , team',
+    'Alice , Engineer , Platform',
+    'Bob   , Designer , Product',
+  ];
+
+  assert.deepEqual(
+    computePostDelimiterSpacing(alreadySpaced, ','),
+    [],
+    'real spaces after delimiters should prevent additional decorative post-delimiter spaces'
+  );
+  assert.deepEqual(
+    applyAlignmentToLines(alreadySpaced, ','),
+    alreadySpaced,
+    'already aligned real spaces should prevent additional decorative alignment spaces'
+  );
+}
+
+{
+  const lines = [
     'name role team',
     'Alice Engineer Platform',
     'Bob Designer Product',
