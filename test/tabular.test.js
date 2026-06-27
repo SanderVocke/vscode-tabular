@@ -1,5 +1,11 @@
 const assert = require('node:assert/strict');
-const { computePadding, computePostDelimiterSpacing, VIRTUAL_SPACE } = require('../lib/tabular');
+const {
+  applyAlignmentToLines,
+  compactLines,
+  computePadding,
+  computePostDelimiterSpacing,
+  VIRTUAL_SPACE,
+} = require('../lib/tabular');
 
 function paddingAt(padding, lineNumber, character) {
   return padding.find((entry) => entry.lineNumber === lineNumber && entry.character === character)?.padding;
@@ -91,6 +97,36 @@ function renderWithPadding(lines, padding) {
   assert.equal(rendered[0].indexOf('location'), rendered[5].indexOf('NewYork'));
   assert.equal(rendered[0].indexOf('years'), rendered[4].indexOf('2'));
   assert.equal(rendered[0].indexOf('years'), rendered[5].indexOf('5'));
+}
+
+{
+  const lines = [
+    'name, role, team',
+    'Alice,Engineer , Platform',
+    'Bob, Designer,Product',
+  ];
+
+  assert.deepEqual(compactLines(lines, ','), [
+    'name,role,team',
+    'Alice,Engineer,Platform',
+    'Bob,Designer,Product',
+  ]);
+}
+
+{
+  const lines = [
+    'name role team',
+    'Alice Engineer Platform',
+    'Bob Designer Product',
+  ];
+
+  const aligned = applyAlignmentToLines(lines, ' ');
+
+  assert.equal(aligned[0].indexOf('role'), aligned[1].indexOf('Engineer'));
+  assert.equal(aligned[0].indexOf('role'), aligned[2].indexOf('Designer'));
+  assert.equal(aligned[0].indexOf('team'), aligned[1].indexOf('Platform'));
+  assert.equal(aligned[0].indexOf('team'), aligned[2].indexOf('Product'));
+  assert.deepEqual(compactLines(aligned, ' '), lines);
 }
 
 assert.equal(VIRTUAL_SPACE.repeat(4).length, 4, 'virtual padding must not collapse in our generated text');

@@ -23,7 +23,7 @@ This extension adds virtual padding spaces before delimiters so the separators l
 3. Run:
 
    ```text
-   VSCode Tabular: Toggle Viewing Mode
+   Tabular: Edit As Aligned
    ```
 
 4. Enter the delimiter when prompted.
@@ -34,6 +34,13 @@ This extension adds virtual padding spaces before delimiters so the separators l
 The mode is enabled per file. Running the same command again in that file disables it.
 
 When enabled, the extension recomputes column widths as the document changes.
+
+Additional commands:
+
+- `Tabular: Align Content` inserts the visible alignment as real spaces in the file.
+- `Tabular: Compact Content` trims leading and trailing whitespace in every cell. For space-delimited files, separator runs are compacted to a single space.
+
+If tabular view is already enabled for the active file, these commands reuse that file's delimiter. Otherwise, they ask for a delimiter.
 
 ## How to install
 

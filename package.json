@@ -15,14 +15,24 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:tabularViewingMode.toggle"
+    "onCommand:tabularViewingMode.toggle",
+    "onCommand:tabularViewingMode.applyAlignment",
+    "onCommand:tabularViewingMode.compactCells"
   ],
   "main": "./extension.js",
   "contributes": {
     "commands": [
       {
         "command": "tabularViewingMode.toggle",
-        "title": "VSCode Tabular: Toggle Viewing Mode"
+        "title": "Tabular: Edit As Aligned"
+      },
+      {
+        "command": "tabularViewingMode.applyAlignment",
+        "title": "Tabular: Align Content"
+      },
+      {
+        "command": "tabularViewingMode.compactCells",
+        "title": "Tabular: Compact Content"
       }
     ]
   },

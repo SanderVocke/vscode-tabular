@@ -1,5 +1,11 @@
 const vscode = require('vscode');
-const { VIRTUAL_SPACE, computePadding, computePostDelimiterSpacing } = require('./lib/tabular');
+const {
+  VIRTUAL_SPACE,
+  applyAlignmentToLines,
+  compactLines,
+  computePadding,
+  computePostDelimiterSpacing,
+} = require('./lib/tabular');
 
 const enabledDocuments = new Map();
 let decorationType;
@@ -62,6 +68,46 @@ function activate(context) {
   );
 
   context.subscriptions.push(
+    vscode.commands.registerCommand('tabularViewingMode.applyAlignment', async () => {
+      const editor = vscode.window.activeTextEditor;
+
+      if (!editor) {
+        vscode.window.showInformationMessage('No active text editor to align.');
+        return;
+      }
+
+      const delimiter = await getDelimiterForCommand(editor.document, 'Apply Tabular Alignment to File');
+
+      if (!delimiter) {
+        return;
+      }
+
+      await replaceDocumentLines(editor, applyAlignmentToLines(documentLines(editor.document), delimiter));
+      vscode.window.showInformationMessage('Applied tabular alignment to this file');
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('tabularViewingMode.compactCells', async () => {
+      const editor = vscode.window.activeTextEditor;
+
+      if (!editor) {
+        vscode.window.showInformationMessage('No active text editor to compact.');
+        return;
+      }
+
+      const delimiter = await getDelimiterForCommand(editor.document, 'Compact Tabular Cells');
+
+      if (!delimiter) {
+        return;
+      }
+
+      await replaceDocumentLines(editor, compactLines(documentLines(editor.document), delimiter));
+      vscode.window.showInformationMessage('Compacted whitespace in tabular cells');
+    })
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand('tabularViewingMode.status', async () => {
       const editor = vscode.window.activeTextEditor;
 
@@ -109,6 +155,66 @@ function activate(context) {
       updateVisibleEditorsForDocument(event.document);
     })
   );
+}
+
+/**
+ * @param {vscode.TextDocument} document
+ * @param {string} title
+ */
+async function getDelimiterForCommand(document, title) {
+  const options = getViewingModeOptions(document);
+
+  if (options) {
+    return options.delimiter;
+  }
+
+  const delimiterInput = await vscode.window.showInputBox({
+    title,
+    prompt: 'Enter the column delimiter. Use \\t for a tab.',
+    value: ',',
+    valueSelection: [0, 1],
+  });
+
+  if (delimiterInput === undefined) {
+    return undefined;
+  }
+
+  const delimiter = normalizeDelimiter(delimiterInput);
+
+  if (!delimiter) {
+    vscode.window.showErrorMessage('Delimiter cannot be empty.');
+    return undefined;
+  }
+
+  return delimiter;
+}
+
+/**
+ * @param {vscode.TextDocument} document
+ */
+function documentLines(document) {
+  const lines = [];
+
+  for (let lineNumber = 0; lineNumber < document.lineCount; lineNumber += 1) {
+    lines.push(document.lineAt(lineNumber).text);
+  }
+
+  return lines;
+}
+
+/**
+ * @param {vscode.TextEditor} editor
+ * @param {string[]} lines
+ */
+async function replaceDocumentLines(editor, lines) {
+  const document = editor.document;
+  const lastLine = document.lineAt(document.lineCount - 1);
+  const fullRange = new vscode.Range(new vscode.Position(0, 0), lastLine.range.end);
+  const eol = document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n';
+
+  await editor.edit((editBuilder) => {
+    editBuilder.replace(fullRange, lines.join(eol));
+  });
 }
 
 function updateAllVisibleEditors() {
