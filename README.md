@@ -23,7 +23,7 @@ This extension adds virtual padding spaces before delimiters so the separators l
 3. Run:
 
    ```text
-   Tabular Viewing Mode: Toggle Viewing Mode
+   VSCode Tabular: Toggle Viewing Mode
    ```
 
 4. Enter the delimiter when prompted.
@@ -59,7 +59,7 @@ The build script runs the syntax checks, tests, and then creates a `.vsix` file 
 Install the generated package with:
 
 ```bash
-code --install-extension tabular-viewing-mode-0.0.1.vsix
+code --install-extension vscode-tabular-0.0.1.vsix
 ```
 
 The exact `.vsix` filename includes the version from `package.json`.

@@ -1,5 +1,5 @@
 {
-  "name": "tabular-viewing-mode",
+  "name": "vscode-tabular",
   "displayName": "Tabular Viewing Mode",
   "description": "A simple global viewing mode that adds test decorations to any text editor.",
   "version": "0.0.1",
@@ -22,7 +22,7 @@
     "commands": [
       {
         "command": "tabularViewingMode.toggle",
-        "title": "Tabular Viewing Mode: Toggle Viewing Mode"
+        "title": "VSCode Tabular: Toggle Viewing Mode"
       }
     ]
   },
