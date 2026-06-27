@@ -45,19 +45,21 @@ When enabled, the extension recomputes column widths as the document changes.
 4. Press `F5`.
 5. A new Extension Development Host window opens with the extension loaded.
 
-### Install from a VSIX package
+### Build and install a VSIX package
 
-If you have a packaged `.vsix` file, install it with:
+This repo includes a canonical npm script for building the extension package. From the repo root, run:
+
+```bash
+npm install
+npm run build:vsix
+```
+
+The build script runs the syntax checks, tests, and then creates a `.vsix` file using the local `@vscode/vsce` dev dependency.
+
+Install the generated package with:
 
 ```bash
 code --install-extension tabular-viewing-mode-0.0.1.vsix
 ```
 
-To create a VSIX package locally, install `vsce` and package the extension:
-
-```bash
-npm install -g @vscode/vsce
-vsce package
-```
-
-Then install the generated `.vsix` file using the command above.
+The exact `.vsix` filename includes the version from `package.json`.

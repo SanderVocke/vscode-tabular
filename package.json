@@ -4,6 +4,10 @@
   "description": "A simple global viewing mode that adds test decorations to any text editor.",
   "version": "0.0.1",
   "publisher": "local",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SanderVocke/vscode-tabular.git"
+  },
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -24,9 +28,11 @@
   },
   "scripts": {
     "lint": "node --check extension.js && node --check lib/tabular.js && node --check test/tabular.test.js",
-    "test": "node test/tabular.test.js"
+    "test": "node test/tabular.test.js",
+    "build:vsix": "npm run lint && npm test && vsce package"
   },
   "devDependencies": {
-    "@types/vscode": "^1.90.0"
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.9.2"
   }
 }
