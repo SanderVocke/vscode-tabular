@@ -2,7 +2,7 @@
   "name": "vscode-tabular",
   "displayName": "Tabular Viewing Mode",
   "description": "A simple global viewing mode that adds test decorations to any text editor.",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "publisher": "local",
   "repository": {
     "type": "git",
