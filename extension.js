@@ -5,6 +5,7 @@ const {
   compactLines,
   computePadding,
   computePostDelimiterSpacing,
+  detectDelimiter,
 } = require('./lib/tabular');
 
 const enabledDocuments = new Map();
@@ -39,11 +40,12 @@ function activate(context) {
         return;
       }
 
+      const suggestedDelimiter = detectDelimiter(documentLines(editor.document));
       const delimiterInput = await vscode.window.showInputBox({
         title: 'Enable Tabular Viewing Mode',
         prompt: 'Enter the column delimiter. Use \\t for a tab.',
-        value: ',',
-        valueSelection: [0, 1],
+        value: delimiterInputValue(suggestedDelimiter),
+        valueSelection: [0, delimiterInputValue(suggestedDelimiter).length],
       });
 
       if (delimiterInput === undefined) {
@@ -168,11 +170,12 @@ async function getDelimiterForCommand(document, title) {
     return options.delimiter;
   }
 
+  const suggestedDelimiter = detectDelimiter(documentLines(document));
   const delimiterInput = await vscode.window.showInputBox({
     title,
     prompt: 'Enter the column delimiter. Use \\t for a tab.',
-    value: ',',
-    valueSelection: [0, 1],
+    value: delimiterInputValue(suggestedDelimiter),
+    valueSelection: [0, delimiterInputValue(suggestedDelimiter).length],
   });
 
   if (delimiterInput === undefined) {
@@ -341,6 +344,13 @@ function normalizeDelimiter(delimiter) {
  */
 function displayDelimiter(delimiter) {
   return delimiter === '\t' ? '\\t' : JSON.stringify(delimiter);
+}
+
+/**
+ * @param {string} delimiter
+ */
+function delimiterInputValue(delimiter) {
+  return delimiter === '\t' ? '\\t' : delimiter;
 }
 
 /**

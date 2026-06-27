@@ -4,6 +4,7 @@ const {
   compactLines,
   computePadding,
   computePostDelimiterSpacing,
+  detectDelimiter,
   VIRTUAL_SPACE,
 } = require('../lib/tabular');
 
@@ -159,6 +160,32 @@ function renderWithPadding(lines, padding) {
   assert.equal(aligned[0].indexOf('team'), aligned[1].indexOf('Platform'));
   assert.equal(aligned[0].indexOf('team'), aligned[2].indexOf('Product'));
   assert.deepEqual(compactLines(aligned, ' '), lines);
+}
+
+{
+  assert.equal(detectDelimiter([
+    'name,role,team',
+    'Alice,Engineer,Platform',
+    'Bob,Designer,Product',
+  ]), ',');
+
+  assert.equal(detectDelimiter([
+    'name\trole\tteam',
+    'Alice\tEngineer\tPlatform',
+    'Bob\tDesigner\tProduct',
+  ]), '\t');
+
+  assert.equal(detectDelimiter([
+    'name|role|team',
+    'Alice|Engineer|Platform',
+    'Bob|Designer|Product',
+  ]), '|');
+
+  assert.equal(detectDelimiter([
+    'name role team',
+    'Alice Engineer Platform',
+    'Bob Designer Product',
+  ]), ' ');
 }
 
 assert.equal(VIRTUAL_SPACE.repeat(4).length, 4, 'virtual padding must not collapse in our generated text');
