@@ -1,6 +1,6 @@
-# Tabular Viewing Mode
+# vscode-tabular: Tools for Tabular Editing in VSCode
 
-Tabular Viewing Mode is a VS Code extension for making delimiter-separated text easier to read without changing the file contents.
+A VS Code extension for making delimiter-separated text easier to read without changing the file contents.
 
 It is useful for files such as CSV, TSV, pipe-separated data, log-like tables, or any other plain-text format where columns are separated by a delimiter.
 
