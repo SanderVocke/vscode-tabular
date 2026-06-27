@@ -1,16 +1,19 @@
 const vscode = require('vscode');
-const { VIRTUAL_SPACE, computePadding } = require('./lib/tabular');
+const { VIRTUAL_SPACE, computePadding, computePostDelimiterSpacing } = require('./lib/tabular');
 
 const enabledDocuments = new Map();
 let decorationType;
+let statusBarItem;
 
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
   decorationType = vscode.window.createTextEditorDecorationType({});
+  statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+  statusBarItem.command = 'tabularViewingMode.status';
 
-  context.subscriptions.push(decorationType);
+  context.subscriptions.push(decorationType, statusBarItem);
 
   context.subscriptions.push(
     vscode.commands.registerCommand('tabularViewingMode.toggle', async () => {
@@ -25,8 +28,7 @@ function activate(context) {
       const existingOptions = enabledDocuments.get(key);
 
       if (existingOptions) {
-        enabledDocuments.delete(key);
-        updateVisibleEditorsForDocument(editor.document);
+        disableViewingMode(editor.document);
         vscode.window.showInformationMessage('Tabular viewing mode disabled for this file');
         return;
       }
@@ -51,6 +53,7 @@ function activate(context) {
 
       enabledDocuments.set(key, { delimiter });
       updateVisibleEditorsForDocument(editor.document);
+      updateStatusBar();
 
       vscode.window.showInformationMessage(
         `Tabular viewing mode enabled for this file using delimiter ${displayDelimiter(delimiter)}`
@@ -59,8 +62,41 @@ function activate(context) {
   );
 
   context.subscriptions.push(
+    vscode.commands.registerCommand('tabularViewingMode.status', async () => {
+      const editor = vscode.window.activeTextEditor;
+
+      if (!editor || !getViewingModeOptions(editor.document)) {
+        updateStatusBar();
+        return;
+      }
+
+      const selection = await vscode.window.showQuickPick([
+        {
+          label: 'Disable Tabular View for This File',
+          description: 'Remove tabular alignment decorations from the active file',
+        },
+      ], {
+        title: 'Tabular View',
+        placeHolder: 'Choose an action',
+      });
+
+      if (selection) {
+        disableViewingMode(editor.document);
+        vscode.window.showInformationMessage('Tabular viewing mode disabled for this file');
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor(() => {
+      updateStatusBar();
+    })
+  );
+
+  context.subscriptions.push(
     vscode.window.onDidChangeVisibleTextEditors(() => {
       updateAllVisibleEditors();
+      updateStatusBar();
     })
   );
 
@@ -103,6 +139,33 @@ function updateVisibleEditorsForDocument(document) {
 /**
  * @param {vscode.TextDocument} document
  */
+function disableViewingMode(document) {
+  enabledDocuments.delete(documentKey(document));
+  updateVisibleEditorsForDocument(document);
+  updateStatusBar();
+}
+
+function updateStatusBar() {
+  if (!statusBarItem) {
+    return;
+  }
+
+  const editor = vscode.window.activeTextEditor;
+  const options = editor ? getViewingModeOptions(editor.document) : undefined;
+
+  if (!options) {
+    statusBarItem.hide();
+    return;
+  }
+
+  statusBarItem.text = `Tabular View ('${statusBarDelimiter(options.delimiter)}')`;
+  statusBarItem.tooltip = 'Tabular viewing mode is enabled for this file. Click to disable.';
+  statusBarItem.show();
+}
+
+/**
+ * @param {vscode.TextDocument} document
+ */
 function getViewingModeOptions(document) {
   return enabledDocuments.get(documentKey(document));
 }
@@ -137,11 +200,14 @@ function applyDecorations(editor) {
     lines.push(editor.document.lineAt(lineNumber).text);
   }
 
-  const decorations = computePadding(lines, delimiter).map(({ lineNumber, character, padding }) => {
-    const delimiterPosition = new vscode.Position(lineNumber, character);
+  const decorations = [
+    ...computePadding(lines, delimiter),
+    ...computePostDelimiterSpacing(lines, delimiter),
+  ].map(({ lineNumber, character, padding }) => {
+    const position = new vscode.Position(lineNumber, character);
 
     return {
-      range: new vscode.Range(delimiterPosition, delimiterPosition),
+      range: new vscode.Range(position, position),
       renderOptions: {
         before: {
           // Normal spaces collapse in VS Code injected text. Non-breaking spaces
@@ -169,6 +235,21 @@ function normalizeDelimiter(delimiter) {
  */
 function displayDelimiter(delimiter) {
   return delimiter === '\t' ? '\\t' : JSON.stringify(delimiter);
+}
+
+/**
+ * @param {string} delimiter
+ */
+function statusBarDelimiter(delimiter) {
+  if (delimiter === '\t') {
+    return '\\t';
+  }
+
+  if (delimiter === ' ') {
+    return 'space';
+  }
+
+  return delimiter;
 }
 
 /**
