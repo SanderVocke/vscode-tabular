@@ -1,0 +1,32 @@
+{
+  "name": "tabular-viewing-mode",
+  "displayName": "Tabular Viewing Mode",
+  "description": "A simple global viewing mode that adds test decorations to any text editor.",
+  "version": "0.0.1",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:tabularViewingMode.toggle"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "tabularViewingMode.toggle",
+        "title": "Tabular Viewing Mode: Toggle Viewing Mode"
+      }
+    ]
+  },
+  "scripts": {
+    "lint": "node --check extension.js && node --check lib/tabular.js && node --check test/tabular.test.js",
+    "test": "node test/tabular.test.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0"
+  }
+}
