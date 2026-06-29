@@ -5,6 +5,7 @@ const {
   computePadding,
   computePostDelimiterSpacing,
   detectDelimiter,
+  transposeLines,
   VIRTUAL_SPACE,
 } = require('../lib/tabular');
 
@@ -160,6 +161,28 @@ function renderWithPadding(lines, padding) {
   assert.equal(aligned[0].indexOf('team'), aligned[1].indexOf('Platform'));
   assert.equal(aligned[0].indexOf('team'), aligned[2].indexOf('Product'));
   assert.deepEqual(compactLines(aligned, ' '), lines);
+}
+
+{
+  assert.deepEqual(transposeLines([
+    'name,role,team',
+    'Alice,Engineer,Platform',
+    'Bob,Designer,Product',
+  ], ','), [
+    'name,Alice,Bob',
+    'role,Engineer,Designer',
+    'team,Platform,Product',
+  ]);
+
+  assert.deepEqual(transposeLines([
+    'name role team',
+    'Alice Engineer Platform',
+    'Bob Designer',
+  ], ' '), [
+    'name Alice Bob',
+    'role Engineer Designer',
+    'team Platform ',
+  ]);
 }
 
 {

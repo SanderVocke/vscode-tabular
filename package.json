@@ -17,7 +17,8 @@
   "activationEvents": [
     "onCommand:tabularViewingMode.toggle",
     "onCommand:tabularViewingMode.applyAlignment",
-    "onCommand:tabularViewingMode.compactCells"
+    "onCommand:tabularViewingMode.compactCells",
+    "onCommand:tabularViewingMode.openTransposed"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -33,6 +34,10 @@
       {
         "command": "tabularViewingMode.compactCells",
         "title": "Tabular: Compact Content"
+      },
+      {
+        "command": "tabularViewingMode.openTransposed",
+        "title": "Tabular: Open Transposed View"
       }
     ]
   },

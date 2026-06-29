@@ -39,6 +39,7 @@ Additional commands:
 
 - `Tabular: Align Content` inserts the visible alignment as real spaces in the file.
 - `Tabular: Compact Content` trims leading and trailing whitespace in every cell. For space-delimited files, separator runs are compacted to a single space.
+- `Tabular: Open Transposed View` opens a read-only snapshot where rows and columns are swapped. The snapshot uses the active file contents at the time the command is run and does not update if the source file changes.
 
 If tabular view is already enabled for the active file, these commands reuse that file's delimiter. Otherwise, they ask for a delimiter.
 

@@ -6,9 +6,14 @@ const {
   computePadding,
   computePostDelimiterSpacing,
   detectDelimiter,
+  transposeLines,
 } = require('./lib/tabular');
 
+const TRANSPOSED_SCHEME = 'tabular-transpose';
+
 const enabledDocuments = new Map();
+const transposedSnapshots = new Map();
+let nextTransposedSnapshotId = 1;
 let decorationType;
 let statusBarItem;
 
@@ -21,6 +26,11 @@ function activate(context) {
   statusBarItem.command = 'tabularViewingMode.status';
 
   context.subscriptions.push(decorationType, statusBarItem);
+  context.subscriptions.push(vscode.workspace.registerFileSystemProvider(
+    TRANSPOSED_SCHEME,
+    new TransposedFileSystemProvider(),
+    { isReadonly: true }
+  ));
 
   context.subscriptions.push(
     vscode.commands.registerCommand('tabularViewingMode.toggle', async () => {
@@ -86,6 +96,43 @@ function activate(context) {
 
       await replaceDocumentLines(editor, applyAlignmentToLines(documentLines(editor.document), delimiter));
       vscode.window.showInformationMessage('Applied tabular alignment to this file');
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('tabularViewingMode.openTransposed', async () => {
+      const editor = vscode.window.activeTextEditor;
+
+      if (!editor) {
+        vscode.window.showInformationMessage('No active text editor to transpose.');
+        return;
+      }
+
+      const delimiter = await getDelimiterForCommand(editor.document, 'Open Transposed Tabular View');
+
+      if (!delimiter) {
+        return;
+      }
+
+      const lines = documentLines(editor.document);
+      const transposedLines = applyAlignmentToLines(transposeLines(lines, delimiter), delimiter);
+      const eol = editor.document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n';
+      const snapshotId = nextTransposedSnapshotId;
+      nextTransposedSnapshotId += 1;
+
+      const sourceName = editor.document.uri.path.split('/').pop() || 'untitled';
+      const uri = vscode.Uri.from({
+        scheme: TRANSPOSED_SCHEME,
+        path: `/snapshot-${snapshotId}/${sourceName}.transposed`,
+      });
+
+      transposedSnapshots.set(uri.toString(), {
+        content: transposedLines.join(eol),
+        ctime: Date.now(),
+      });
+
+      const document = await vscode.workspace.openTextDocument(uri);
+      await vscode.window.showTextDocument(document, { preview: false });
     })
   );
 
@@ -218,6 +265,70 @@ async function replaceDocumentLines(editor, lines) {
   await editor.edit((editBuilder) => {
     editBuilder.replace(fullRange, lines.join(eol));
   });
+}
+
+class TransposedFileSystemProvider {
+  constructor() {
+    this.onDidChangeFile = new vscode.EventEmitter().event;
+  }
+
+  /**
+   * @param {vscode.Uri} uri
+   */
+  stat(uri) {
+    const snapshot = getTransposedSnapshot(uri);
+
+    return {
+      type: vscode.FileType.File,
+      ctime: snapshot.ctime,
+      mtime: snapshot.ctime,
+      size: Buffer.byteLength(snapshot.content),
+    };
+  }
+
+  /**
+   * @param {vscode.Uri} uri
+   */
+  readFile(uri) {
+    return Buffer.from(getTransposedSnapshot(uri).content, 'utf8');
+  }
+
+  readDirectory() {
+    return [];
+  }
+
+  createDirectory() {
+    throw vscode.FileSystemError.NoPermissions('Transposed tabular views are read-only.');
+  }
+
+  writeFile() {
+    throw vscode.FileSystemError.NoPermissions('Transposed tabular views are read-only.');
+  }
+
+  delete() {
+    throw vscode.FileSystemError.NoPermissions('Transposed tabular views are read-only.');
+  }
+
+  rename() {
+    throw vscode.FileSystemError.NoPermissions('Transposed tabular views are read-only.');
+  }
+
+  watch() {
+    return new vscode.Disposable(() => {});
+  }
+}
+
+/**
+ * @param {vscode.Uri} uri
+ */
+function getTransposedSnapshot(uri) {
+  const snapshot = transposedSnapshots.get(uri.toString());
+
+  if (!snapshot) {
+    throw vscode.FileSystemError.FileNotFound(uri);
+  }
+
+  return snapshot;
 }
 
 function updateAllVisibleEditors() {
